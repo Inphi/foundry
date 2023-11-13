@@ -125,32 +125,46 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[0],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(1234),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: false,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 0,
                 data: "",
-                reverted: false
+                reverted: false,
+                storageAccesses: new Vm.StorageAccess[](0)
             })
         );
 
         assertEq(
             called[1],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(5678),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: false,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 1 ether,
                 data: "",
-                reverted: false
+                reverted: false,
+                storageAccesses: new Vm.StorageAccess[](0)
             })
         );
         assertEq(
             called[2],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(123469),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: false,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 0,
                 data: "hello world",
                 reverted: false
@@ -159,9 +173,13 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[3],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(5678),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 0,
                 data: "",
                 reverted: false
@@ -170,9 +188,13 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[4],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(caller),
                 kind: Vm.AccountAccessKind.Create,
                 initialized: true,
+                oldBalance: 0,
+                newBalance: 2 ether,
+                deployedCode: caller.code,
                 value: 2 ether,
                 data: abi.encodePacked(type(SelfCaller).creationCode, abi.encode("hello2 world2")),
                 reverted: false
@@ -181,9 +203,13 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[5],
             Vm.AccountAccess({
+                accessor: address(caller),
                 account: address(caller),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
+                oldBalance: 2 ether,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 0.2 ether,
                 data: "",
                 reverted: false
@@ -194,6 +220,7 @@ contract RecordAccountAccessesTest is DSTest {
     /// @notice Test that account accesses are correctly recorded when a call
     ///         reverts
     function testRevertingCall() public {
+        uint256 initBalance = address(this).balance;
         cheats.recordAccountAccesses();
         try this.revertingCall{value: 1 ether}(address(1234), "") {} catch {}
         Vm.AccountAccess[] memory called = cheats.getRecordedAccountAccesses();
@@ -201,9 +228,13 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[0],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(this),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
+                oldBalance: initBalance,
+                newBalance: initBalance,
+                deployedCode: hex"",
                 value: 1 ether,
                 data: abi.encodeCall(this.revertingCall, (address(1234), "")),
                 reverted: true
@@ -212,9 +243,13 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[1],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(1234),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: false,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 value: 0.1 ether,
                 data: "",
                 reverted: true
@@ -245,8 +280,11 @@ contract RecordAccountAccessesTest is DSTest {
             assertEq(
                 called[0],
                 Vm.AccountAccess({
+                    accessor: address(this),
                     account: address(1234),
                     kind: Vm.AccountAccessKind.Call,
+                    oldBalance: 0,
+                    newBalance: 0,
                     initialized: false,
                     value: 0,
                     data: "",
@@ -259,8 +297,12 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner),
                 kind: Vm.AccountAccessKind.Call,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 initialized: true,
                 value: 1 ether,
                 data: abi.encodeCall(NestedRunner.run, (shouldRevert)),
@@ -270,8 +312,12 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 1],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.reverter()),
                 kind: Vm.AccountAccessKind.Call,
+                oldBalance: 0,
+                newBalance: 0,
+                deployedCode: hex"",
                 initialized: true,
                 value: 0.1 ether,
                 data: abi.encodeCall(Reverter.run, ()),
@@ -281,8 +327,11 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 2],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.doer()),
                 kind: Vm.AccountAccessKind.Call,
+                oldBalance: 0,
+                newBalance: 0,
                 initialized: true,
                 value: 0.01 ether,
                 data: abi.encodeCall(Doer.run, ()),
@@ -292,8 +341,11 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 3],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.doer()),
                 kind: Vm.AccountAccessKind.Call,
+                oldBalance: 0,
+                newBalance: 0,
                 initialized: true,
                 value: 0.001 ether,
                 data: abi.encodeCall(Doer.doStuff, ()),
@@ -304,6 +356,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 4],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.succeeder()),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
@@ -315,6 +368,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 5],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.doer()),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
@@ -326,6 +380,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[startingIndex + 6],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: address(runner.doer()),
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
@@ -358,6 +413,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[1],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: hypotheticalAddress,
                 kind: Vm.AccountAccessKind.Create,
                 initialized: true,
@@ -369,6 +425,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[2],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: hypotheticalAddress,
                 kind: Vm.AccountAccessKind.Call,
                 initialized: true,
@@ -391,6 +448,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[1],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: a,
                 kind: Vm.AccountAccessKind.Create,
                 initialized: true,
@@ -402,6 +460,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[2],
             Vm.AccountAccess({
+                accessor: address(a),
                 account: address(this),
                 kind: Vm.AccountAccessKind.SelfDestruct,
                 initialized: true,
@@ -413,6 +472,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[3],
             Vm.AccountAccess({
+                accessor: address(this),
                 account: b,
                 kind: Vm.AccountAccessKind.Create,
                 initialized: true,
@@ -424,6 +484,7 @@ contract RecordAccountAccessesTest is DSTest {
         assertEq(
             called[4],
             Vm.AccountAccess({
+                accessor: address(b),
                 account: address(bytes20("doesn't exist yet")),
                 kind: Vm.AccountAccessKind.SelfDestruct,
                 initialized: false,
@@ -449,11 +510,29 @@ contract RecordAccountAccessesTest is DSTest {
     }
 
     function assertEq(Vm.AccountAccess memory actualAccess, Vm.AccountAccess memory expectedAccess) internal {
+        assertEq(actualAccess.accessor, expectedAccess.accessor, "incorrect accessor");
         assertEq(actualAccess.account, expectedAccess.account, "incorrect account");
         assertEq(toUint(actualAccess.kind), toUint(expectedAccess.kind), "incorrect kind");
         assertEq(toUint(actualAccess.initialized), toUint(expectedAccess.initialized), "incorrect initialized");
+        assertEq(actualAccess.oldBalance, expectedAccess.oldBalance, "incorrect oldBalance");
+        assertEq(actualAccess.newBalance, expectedAccess.newBalance, "incorrect newBalance");
+        assertEq(actualAccess.deployedCode, expectedAccess.deployedCode, "incorrect deployedCode");
         assertEq(actualAccess.value, expectedAccess.value, "incorrect value");
         assertEq(actualAccess.data, expectedAccess.data, "incorrect data");
+        assertEq(actualAccess.reverted, expectedAccess.reverted, "incorrect reverted");
+        assertEq(actualAccess.storageAccesses.length, expectedAccess.storageAccesses.length, "incorrect storageAccesses length");
+        for (uint256 i = 0; i < actualAccess.storageAccesses.length; i++) {
+            assertEq(actualAccess.storageAccesses[i], expectedAccess.storageAccesses[i]);
+        }
+    }
+
+    function assertEq(Vm.StorageAccess memory actual, Vm.StorageAccess memory expected) internal {
+        assertEq(actual.account, expected.account, "incorrect account");
+        assertEq(actual.slot, expected.slot, "incorrect slot");
+        assertEq(toUint(actual.isWrite), toUint(expected.isWrite), "incorrect isWrite");
+        assertEq(actual.previousValue, expected.previousValue, "incorrect previousValue");
+        assertEq(actual.newValue, expected.newValue, "incorrect newValue");
+        assertEq(toUint(actual.reverted), toUint(expected.reverted), "incorrect reverted");
     }
 
     function toUint(Vm.AccountAccessKind kind) internal pure returns (uint256 value) {

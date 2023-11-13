@@ -266,9 +266,14 @@
       "description": "The result of a `getRecordedAccountAccess` call.",
       "fields": [
         {
+          "name": "accessor",
+          "ty": "address",
+          "description": "What accessed the account."
+        },
+        {
           "name": "account",
           "ty": "address",
-          "description": "The account whose storage was accessed."
+          "description": "The account whose storage was accessed.\n It's either the account created, callee or a selfdestruct recipient for CREATE, CALL or SELFDESTRUCT."
         },
         {
           "name": "kind",
@@ -279,6 +284,21 @@
           "name": "initialized",
           "ty": "bool",
           "description": "If the account is initialized or empty"
+        },
+        {
+          "name": "oldBalance",
+          "ty": "uint256",
+          "description": "The previous account balance."
+        },
+        {
+          "name": "newBalance",
+          "ty": "uint256",
+          "description": "The new new account balance."
+        },
+        {
+          "name": "deployedCode",
+          "ty": "bytes",
+          "description": "Code of the account deployed by CREATE."
         },
         {
           "name": "value",
@@ -294,6 +314,11 @@
           "name": "reverted",
           "ty": "bool",
           "description": "If this access was in a reverted context"
+        },
+        {
+          "name": "storageAccesses",
+          "ty": "StorageAccess[]",
+          "description": "An ordered list of storage accesses made during an account access operation."
         }
       ]
     },

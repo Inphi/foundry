@@ -146,18 +146,29 @@ interface Vm {
 
     /// The result of a `getRecordedAccountAccess` call.
     struct AccountAccess {
+        /// What accessed the account.
+        address accessor;
         /// The account whose storage was accessed.
+        /// It's either the account created, callee or a selfdestruct recipient for CREATE, CALL or SELFDESTRUCT.
         address account;
         /// The kind of account access.
         AccountAccessKind kind;
         /// If the account is initialized or empty
         bool initialized;
+        /// The previous account balance.
+        uint256 oldBalance;
+        /// The new new account balance.
+        uint256 newBalance;
+        /// Code of the account deployed by CREATE.
+        bytes deployedCode;
         /// Value passed along with the account access
         uint256 value;
         /// Input data provided to the CREATE or CALL
         bytes data;
         /// If this access was in a reverted context
         bool reverted;
+        /// An ordered list of storage accesses made during an account access operation.
+        StorageAccess[] storageAccesses;
     }
 
     /// The result of a `getRecordedStorageAccess` call.
